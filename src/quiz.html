@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Quiz</title>
+    <link rel="stylesheet" href="/src/output.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+			const urlParams = new URLSearchParams(window.location.search);
+			let questions = parseInt(urlParams.get('questions')) || 10;
+			const dayButtons = document.querySelectorAll('.day-button');
+			const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+			const startTime = Date.now();
+			const wrongTimeoutSeconds = 5;
+			let correctDay = '';
+			let timeInterval = null;
+
+			const createErrorMessage = () => {
+				const alertMessage = document.createElement('div');
+				alertMessage.classList.add('p-4', 'mb-4', 'text-sm', 'text-red-800', 'rounded-lg', 'bg-red-50', 'dark:bg-gray-800', 'dark:text-red-400');
+				alertMessage.setAttribute('role', 'alert');
+				alertMessage.innerHTML = `
+					<span class="font-medium">Wrong!</span> Try again in ${wrongTimeoutSeconds} seconds.
+				`;
+
+				document.getElementById('alerts').appendChild(alertMessage);
+				setTimeout(() => {
+					alertMessage.remove();
+				}, 5000);
+			};
+				
+
+			const askQuestion = () => {
+				const randomDate = new Date(Date.now() + Math.floor(Math.random() * 10000000000));
+				correctDay = daysOfWeek[randomDate.getDay()];
+				console.log(correctDay)
+				const localizedDate = randomDate.toLocaleDateString();
+				document.getElementById('question').innerText = `${localizedDate}`;
+			};
+
+			const updateTimer = () => {
+                const currentTime = Date.now();
+                const timeElapsed = (currentTime - startTime) / 1000;
+                const minutes = Math.floor(timeElapsed / 60);
+                const seconds = Math.floor(timeElapsed % 60);
+                document.getElementById('timer').innerText = `Time: ${minutes}m ${seconds}s`;
+            };
+
+            timeInterval = setInterval(updateTimer, 100);
+			
+
+			document.querySelectorAll('.day-button').forEach(button => {
+				button.addEventListener('click', (event) => {
+					if (event.target.innerText === correctDay) {
+						questions--;
+						if (questions == 0) {
+							const endTime = Date.now();
+							const timeTaken = ((endTime - startTime) / 1000).toFixed(2);
+							clearInterval(timeInterval);
+							document.getElementById('game').style.display = 'none';
+							document.getElementById('result').style.display = 'block';
+							document.getElementById('result-text').innerHTML = `You answered all questions correctly! You took <strong>${timeTaken}</strong> seconds.`;
+							return;
+						}
+						askQuestion();
+					} else {
+						createErrorMessage();
+						dayButtons.forEach(button => button.disabled = true);
+						setTimeout(() => {
+							dayButtons.forEach(button => button.disabled = false);
+						}, wrongTimeoutSeconds * 1000);
+					}
+				});
+			});
+
+			askQuestion();
+        });
+    </script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div id="game" class="bg-white p-6 rounded-lg shadow-lg text-center">
+		<div id="alerts"></div>
+        <h1 class="text-xl font-bold mb-4">What day of the week is:</h1>
+		<p class="mb-8" id="question"></p>
+        <div class="grid grid-cols-7 gap-4">
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Monday</button>
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Tuesday</button>
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Wednesday</button>
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Thursday</button>
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Friday</button>
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Saturday</button>
+            <button class="day-button bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">Sunday</button>
+        </div>
+		<p id="timer" class="text-lg font-bold mt-8"></p>
+    </div>
+	<div id="result" style="display: none;" class="bg-white p-6 rounded-lg shadow-lg text-center">
+		<p class="text-2xl mb-8" id="result-text"></p>
+		<a href="javascript:location.reload()" class="text-blue-500 py-2 px-4">Play again</a>
+	</div>
+</body>
+</html>
